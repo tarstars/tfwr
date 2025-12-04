@@ -55,6 +55,8 @@ def one_drone_job_sunflower(piece):
 	while True:
 		for x, y in piece:
 			navigate(x,y)
+			if get_ground_type() != Grounds.Soil:
+				till()
 			if get_entity_type() != Entities.Sunflower:
 				plant(Entities.Sunflower)
 			if can_harvest():
@@ -187,7 +189,7 @@ def companion_harvest():
 #move(West)		
 #while True:
 #	companion_harvest()
-#mega_harvest(one_drone_job_carrot)
+mega_harvest(one_drone_job_sunflower)
 #harvest()
 #fast_harvest()
 #fast_till()
