@@ -21,8 +21,10 @@ def drone_map_reduce(objects, f_map, f_red):
 	for _ in range(max_drones()):
 		drone_jobs.append([])
 	
+	ind = 0
 	for q in objects:
-		drone_jobs[q % len(drone_jobs)].append(q)
+		drone_jobs[ind % len(drone_jobs)].append(q)
+		ind += 1
 
 	results = []
 	drones = []
@@ -70,12 +72,9 @@ def till_field():
  
 def plant_sunflowers():
 	drone_jobs = []
-
-	for _ in range(max_drones()):
-		drone_jobs.append([])
 	
 	for q in range(get_world_size()):
-		drone_jobs[q % len(drone_jobs)].append(q)
+		drone_jobs.append(q)
 
 	def drone_job(columns):
 		def g():
@@ -87,36 +86,16 @@ def plant_sunflowers():
 					heights[(q, p)] = measure()
 			return heights
 		return g
+
+	def reduce_hights(h1, h2):
+		for k in h2:
+			h1[k] = h2[k]
+		return h1
 	
-	drones = []
-	field_height = {}
-	while drone_jobs:
-		while drone_jobs and num_drones() < max_drones():
-			current = drone_jobs.pop()
-			drones.append(spawn_drone(drone_job(current)))
-		if drone_jobs:
-			current = drone_jobs.pop()
-			result = drone_job(current)()
-			for k in result:
-				field_height[k] = result[k]
-		for current_drone in drones:
-			result = wait_for(current_drone)
-			for k in result:
-				field_height[k] = result[k]
-	
-	return field_height
+	return drone_map_reduce(drone_jobs, drone_job, reduce_hights)
+
 
 def gather_all(cells):
-	drone_jobs = []
-
-	for _ in range(max_drones()):
-		drone_jobs.append([])
-	
-	ind = 0
-	for c in cells:
-		drone_jobs[ind % len(drone_jobs)].append(c)
-		ind += 1
-
 	def drone_job(cells):
 		def g():
 			for q, p in cells:
@@ -126,13 +105,7 @@ def gather_all(cells):
 					harvest()
 		return g
 	
-	while drone_jobs:
-		while drone_jobs and num_drones() < max_drones():
-			current = drone_jobs.pop()
-			spawn_drone(drone_job(current))
-		if drone_jobs:
-			current = drone_jobs.pop()
-			drone_job(current)()
+	drone_map_reduce(cells, drone_job, no_reduce)
 
 
 till_field()
